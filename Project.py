@@ -368,14 +368,13 @@ class BPlusTree(object):
 #################################################MainStart#############################################
 
 class read_files:
-    def __init__(self):
-        self.keys = {}
-        self.already_inserted = set()
-
-    def read_pairs_from_file(self, file_name, bpt_instance):
+    @staticmethod
+    def read_pairs_from_file(file_name, bpt_instance):
         """
         Reads pairs from a file and stores them in the keys dictionary.
         """
+        keys = {}
+        already_inserted = set()
         try:
             if not isinstance(file_name, str):
                 raise ValueError("file_name must be a string.")
@@ -397,29 +396,29 @@ class read_files:
                                 if ':' in element:
                                     term.add(element.split(':')[0])  # Add only the term before colon to the set
 
-                            if document_id in self.already_inserted:
+                            if document_id in already_inserted:
                                 bpt_instance.retrieve(document_id).update(term)
-                                self.keys[document_id].update(term)
+                                keys[document_id].update(term)
                             else:
-                                self.already_inserted.add(document_id)
+                                already_inserted.add(document_id)
                                 bpt_instance.insert(document_id, term)
-                                self.keys[document_id] = term
+                                keys[document_id] = term
                         else:
                             key = elements[0]
                             value = elements[1]
 
-                            if key in self.already_inserted:
+                            if key in already_inserted:
                                 bpt_instance.retrieve(key).append(value)
-                                self.keys[key].add(value)
+                                keys[key].add(value)
                             else:
-                                self.already_inserted.add(key)
+                                already_inserted.add(key)
                                 bpt_instance.insert(key, {value})
-                                self.keys[key] = {value}
+                                keys[key] = {value}
         except IOError:
             print(f"Could not read file: {file_name}")
 
         print("Files have been stored")
-        return self.keys
+        return keys
     
 class write_files:
     def __init__(self, file_name, data_to_write, type_of_file):
@@ -482,11 +481,12 @@ class jaccard_index:
         """
         for stem_key, term_value in self.stem.items():
             self.jaccard_index[stem_key] = {}
-            term_docs = self.get_term_docs(term_value)
+            term_docs = set(self.get_term_docs(term_value))
             category_key = None
             for category_key, category_docs in self.category.items():
-                intersection = len(set(term_docs).intersection(set(category_docs)))
-                union = len(set(term_docs).union(set(category_docs)))
+                category_docs_set = set(category_docs)
+                intersection = len(term_docs & category_docs_set)
+                union = len(term_docs | category_docs)
                 self.jaccard_index[stem_key][category_key] = intersection / union
         return self.jaccard_index
 
@@ -495,9 +495,11 @@ class jaccard_index:
         Get all the documents that contain at least one of the terms
         """
         term_docs = []
+        term_value_set = set(term_value)
         for doc_id, terms in self.term.items():
             for term_list in terms:
-                if any(value in term_list for value in term_value):
+                term_list_set = {term_list}
+                if term_value_set & term_list_set:  # Use set intersection operation
                     term_docs.append(doc_id)
         return list(set(term_docs))  # remove duplicates
 
@@ -557,24 +559,24 @@ class MainConsole:
         #file_to_read_term = r"C:\Users\mypc1\Desktop\Project_1\dataforproject1\lyrl2004_vectors_train.dat.txt"
         #file_to_read_stems = r"C:\Users\mypc1\Desktop\Project_1\dataforproject1\stem.termid.idf.map.txt"
 
+        #Dont forget to change the path based on your computer
         file_to_read_categories = r"C:\Users\mypc1\Desktop\Project_1\TestFile\category_docId.txt"
         file_to_read_term = r"C:\Users\mypc1\Desktop\Project_1\TestFile\docID_term.txt"
         file_to_read_stems = r"C:\Users\mypc1\Desktop\Project_1\TestFile\stem_term.txt"
-
+        
         order_of_tree = 10
-        bpt = BPlusTree(10)
-        reader = read_files()
+        bpt = BPlusTree(order_of_tree)
 
-        returned_data_categories = reader.read_pairs_from_file(file_to_read_categories, bpt) # Calling the method and storing the return value
-        returned_data_term = reader.read_pairs_from_file(file_to_read_term, bpt)
-        returned_data_stems = reader.read_pairs_from_file(file_to_read_stems, bpt)
+        returned_data_categories = read_files.read_pairs_from_file(file_to_read_categories, bpt) # Calling the method and storing the return value
+        returned_data_term = read_files.read_pairs_from_file(file_to_read_term, bpt)
+        returned_data_stems = read_files.read_pairs_from_file(file_to_read_stems, bpt)
         jaccard_instance =jaccard_index(returned_data_categories, returned_data_term, returned_data_stems)
         jaccard_index_value = jaccard_instance.calculate_jaccard_index()
         print("Jaccard Index has been calculated")
 
         while True:
             print("\n")
-            MainConsole.print_menu()
+            #MainConsole.print_menu()
             user_input = input("Please enter your choice: ")
             parsed_input = user_input.split()
             operation = parsed_input[0]
