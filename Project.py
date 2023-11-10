@@ -1,4 +1,5 @@
 from __future__ import annotations
+from typing import Self
 from openpyxl.styles import Font
 from math import floor
 from random import randint
@@ -375,11 +376,14 @@ class read_files:
         """
         Reads pairs from a file and stores them in the keys dictionary.
         """
-        if not isinstance(file_name, str):
-            raise ValueError("file_name must be a string.")
-        if not os.path.isfile(file_name):
-            raise ValueError(f"File {file_name} does not exist.")
-
+        try:
+            if not isinstance(file_name, str):
+                raise ValueError("file_name must be a string.")
+            if not os.path.isfile(file_name):
+                raise ValueError(f"File {file_name} does not exist.")
+        except Exception as e:
+            print(f"An error occurred: {e}")
+        
         try:
             with open(file_name, 'r', encoding = "utf-8") as file:
                 for line in file:
@@ -405,7 +409,7 @@ class read_files:
                             value = elements[1]
 
                             if key in self.already_inserted:
-                                bpt_instance.retrieve(key).add(value)
+                                bpt_instance.retrieve(key).append(value)
                                 self.keys[key].add(value)
                             else:
                                 self.already_inserted.add(key)
@@ -418,7 +422,8 @@ class read_files:
         return self.keys
     
 class write_files:
-        def __init__(self, file_name, data_to_write, type_of_file):
+    def __init__(self, file_name, data_to_write, type_of_file):
+        try:
             if not isinstance(file_name, str):
                 raise ValueError("The file name must be a string.")
             if not isinstance(data_to_write, dict):
@@ -431,35 +436,39 @@ class write_files:
             self.file_name = file_name
             self.data_to_write = data_to_write
             self.type_of_file = type_of_file
+        except Exception as e:
+            print(f"An error occurred: {e}")
+            return
 
-        def write_to_file(self):
+    def write_to_file(self):
             try:
-                user_file =  f"{self.file_name}.{self.type_of_file}"
-                with open(user_file, 'w') as file:
-                    if self.type_of_file == "json":
-                        json_data = []
-                        for stem, categories in self.data_to_write.items():
-                            for category, jaccard_index in categories.items():
-                                json_data.append({
-                                    'stem': stem,
-                                    'category': category,
-                                    'jaccardIndex': jaccard_index
+                if self.type_of_file is not  None or self.file_name is not None:
+                    user_file =  f"{self.file_name}.{self.type_of_file}"
+                    with open(user_file, 'w') as file:
+                        if self.type_of_file == "json":
+                            json_data = []
+                            for stem, categories in self.data_to_write.items():
+                                for category, jaccard_index in categories.items():
+                                    json_data.append({
+                                        'stem': stem,
+                                        'category': category,
+                                        'jaccardIndex': jaccard_index
                                 })
-                        json.dump(json_data, file)
+                            json.dump(json_data, file)
 
-                    else:
-                        wb = openpyxl.Workbook()
-                        ws = wb.active
-                        ws.title = "Jaccard Index"
-                        ws.append(["Stem", "Category", "Jaccard Index"])
-                        for stem, categories in self.data_to_write.items():
-                            for category, jaccard_index in categories.items():
-                                ws.append([stem, category, jaccard_index])
-                        wb.save(user_file)
+                        else:
+                            wb = openpyxl.Workbook()
+                            ws = wb.active
+                            ws.title = "Jaccard Index"
+                            ws.append(["Stem", "Category", "Jaccard Index"])
+                            for stem, categories in self.data_to_write.items():
+                                for category, jaccard_index in categories.items():
+                                    ws.append([stem, category, jaccard_index])
+                            wb.save(user_file)
             except IOError:
                 print(f"Could not write to file: {self.file_name}")
-            print(f"Data has been written to file: {self.file_name}")
-        
+                return
+                        
 class jaccard_index:
     def __init__(self, category, term, stem):
         self.category = category
@@ -544,63 +553,73 @@ class MainConsole:
     @staticmethod
     def main():
         print("Welcome to our application!")
-        MainConsole.print_menu()
-        file_to_read_categories = r"C:\Users\mypc1\Desktop\Project_1\dataforproject1\rcv1-v2.topics.qrels.txt"
-        file_to_read_term = r"C:\Users\mypc1\Desktop\Project_1\dataforproject1\lyrl2004_vectors_train.dat.txt"
-        file_to_read_stems = r"C:\Users\mypc1\Desktop\Project_1\dataforproject1\stem.termid.idf.map.txt"
+        #file_to_read_categories = r"C:\Users\mypc1\Desktop\Project_1\dataforproject1\rcv1-v2.topics.qrels.txt"
+        #file_to_read_term = r"C:\Users\mypc1\Desktop\Project_1\dataforproject1\lyrl2004_vectors_train.dat.txt"
+        #file_to_read_stems = r"C:\Users\mypc1\Desktop\Project_1\dataforproject1\stem.termid.idf.map.txt"
 
-        order_of_tree = 5
-        bpt = BPlusTree(5)
+        file_to_read_categories = r"C:\Users\mypc1\Desktop\Project_1\TestFile\category_docId.txt"
+        file_to_read_term = r"C:\Users\mypc1\Desktop\Project_1\TestFile\docID_term.txt"
+        file_to_read_stems = r"C:\Users\mypc1\Desktop\Project_1\TestFile\stem_term.txt"
+
+        order_of_tree = 10
+        bpt = BPlusTree(10)
         reader = read_files()
-        
-        returned_data_categories = reader.read_pairs_from_file(file_to_read_categories) # Calling the method and storing the return value
-        returned_data_term = reader.read_pairs_from_file(file_to_read_term)
-        returned_data_stems = reader.read_pairs_from_file(file_to_read_stems)
-        jaccard = jaccard_index(returned_data_categories, returned_data_term, returned_data_stems)
-        jaccard_index = jaccard.calculate_jaccard_index()
 
-        user_input = input("Please enter your choice: ")
-        parsed_input = user_input.split()
-        operation = parsed_input[0]
-        parameters = parsed_input[1:]
+        returned_data_categories = reader.read_pairs_from_file(file_to_read_categories, bpt) # Calling the method and storing the return value
+        returned_data_term = reader.read_pairs_from_file(file_to_read_term, bpt)
+        returned_data_stems = reader.read_pairs_from_file(file_to_read_stems, bpt)
+        jaccard_instance =jaccard_index(returned_data_categories, returned_data_term, returned_data_stems)
+        jaccard_index_value = jaccard_instance.calculate_jaccard_index()
+        print("Jaccard Index has been calculated")
 
-        if operation == '@':
-            category = parameters[0]
-            k = int(parameters[1])
-            most_relevant_stems = jaccard_index.get_most_relevant_stems_for_category(category, k)
-            print(f"The top {k} stems for category {category} are: {most_relevant_stems}")
-        elif operation == '#':
-            stem = parameters[0]
-            k = int(parameters[1])
-            most_relevant_categories = jaccard_index.get_most_relevant_categories_for_stem(stem, k)
-            print(f"The top {k} categories for stem {stem} are: {most_relevant_categories}")
-        elif operation == '$':
-            stem = parameters[0]
-            category = parameters[1]
-            jaccard_index_value = jaccard_index.jaccard_index[stem][category]
-            print(f"The Jaccard Index for the pair ({stem}, {category}) is: {jaccard_index_value}")
-        elif operation == '*':
-            filename = parameters[0]
-            file_type = parameters[1]
-            writer = write_files(filename, jaccard_index, file_type)
-            writer.write_to_file()
-            print(f"Data has been written to file: {filename}.{file_type}")
-        elif operation == 'P':
-            did = parameters[0]
-            option = parameters[1]
-            if option == '-c':
-                print(f"The stems for document {did} are: {bpt.retrieve(did)}")
-            else
-                print(f"The categories for document {did} are: {bpt.retrieve(did)}")
-        elif operation == 'C':
-            did = parameters[0]
-            option = parameters[1]
-            if option == '-c':
-                print(f"The count of unique terms for document {did} is: {len(bpt.retrieve(did))}")
+        while True:
+            print("\n")
+            MainConsole.print_menu()
+            user_input = input("Please enter your choice: ")
+            parsed_input = user_input.split()
+            operation = parsed_input[0]
+            parameters = parsed_input[1:]
+
+            if operation == '@':
+                category = parameters[0]
+                k = int(parameters[1])
+                most_relevant_stems = jaccard_instance.get_most_relevant_stems_for_category(category, k)
+                print(f"The top {k} stems for category {category} are: {most_relevant_stems}")
+            elif operation == '#':
+                stem = parameters[0]
+                k = int(parameters[1])
+                most_relevant_categories = jaccard_instance.jaccard_index.get_most_relevant_categories_for_stem(stem, k)
+                print(f"The top {k} categories for stem {stem} are: {most_relevant_categories}")
+            elif operation == '$':
+                stem = parameters[0]
+                category = parameters[1]
+                jaccard_index_value = jaccard_instance.jaccard_index.jaccard_index[stem][category]
+                print(f"The Jaccard Index for the pair ({stem}, {category}) is: {jaccard_index_value}")
+            elif operation == '*':
+                try:
+                    filename = parameters[0]
+                    filename, file_type = filename.split('.')
+                    writer = write_files(filename, jaccard_index_value, file_type)
+                    writer.write_to_file()
+                    print(f"Data has been written to file: {filename}.{file_type}")
+                except Exception as e:
+                    print(f"An error occurred: {e}")
+            elif operation == 'P':
+                did = parameters[0]
+                option = parameters[1]
+                if option == '-c':
+                    print(f"The stems for document {did} are: {bpt.retrieve(did)}")
+                else:
+                    print(f"The categories for document {did} are: {bpt.retrieve(did)}")
+            elif operation == 'C':
+                did = parameters[0]
+                option = parameters[1]
+                if option == '-c':
+                    print(f"The count of unique terms for document {did} is: {len(bpt.retrieve(did))}")
+                else:
+                    print(f"The count of categories for document {did} is: {len(bpt.retrieve(did))}")
             else:
-                print(f"The count of categories for document {did} is: {len(bpt.retrieve(did))}")
-        else:
-            print("Invalid operation")
+                print("Invalid operation")
 
     @staticmethod
     def print_menu():
@@ -617,3 +636,4 @@ class MainConsole:
 if __name__ == "__main__":
     MainConsole.main()
 
+#################################################MainEnd#############################################
