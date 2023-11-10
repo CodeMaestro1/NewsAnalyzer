@@ -375,6 +375,7 @@ class read_files:
         """
         keys = {}
         already_inserted = set()
+        b_plus_data_set =set()
         try:
             if not isinstance(file_name, str):
                 raise ValueError("file_name must be a string.")
@@ -408,12 +409,20 @@ class read_files:
                             value = elements[1]
 
                             if key in already_inserted:
-                                bpt_instance.retrieve(key).append(value)
                                 keys[key].add(value)
                             else:
-                                already_inserted.add(key)
-                                bpt_instance.insert(key, {value})
+                                already_inserted.add(value)
                                 keys[key] = {value}
+                            
+                            ################For the BplusDataStructure##################
+                            if value in b_plus_data_set:
+                                bpt_instance.retrieve(value).append(key)
+                                keys[key].add(value)
+                            else:
+                                b_plus_data_set.add(value)
+                                bpt_instance.insert(value, {key})
+                                keys[key] = {value}
+
         except IOError:
             print(f"Could not read file: {file_name}")
 
@@ -565,18 +574,20 @@ class MainConsole:
         file_to_read_stems = r"C:\Users\mypc1\Desktop\Project_1\TestFile\stem_term.txt"
         
         order_of_tree = 10
-        bpt = BPlusTree(order_of_tree)
+        bpt_categories = BPlusTree(order_of_tree)
+        bpt__term = BPlusTree(order_of_tree)
+        bpt_stems = BPlusTree(order_of_tree)
 
-        returned_data_categories = read_files.read_pairs_from_file(file_to_read_categories, bpt) # Calling the method and storing the return value
-        returned_data_term = read_files.read_pairs_from_file(file_to_read_term, bpt)
-        returned_data_stems = read_files.read_pairs_from_file(file_to_read_stems, bpt)
+        returned_data_categories = read_files.read_pairs_from_file(file_to_read_categories, bpt_categories) # Calling the method and storing the return value
+        returned_data_term = read_files.read_pairs_from_file(file_to_read_term, bpt__term)
+        returned_data_stems = read_files.read_pairs_from_file(file_to_read_stems, bpt_stems)
         jaccard_instance =jaccard_index(returned_data_categories, returned_data_term, returned_data_stems)
         jaccard_index_value = jaccard_instance.calculate_jaccard_index()
         print("Jaccard Index has been calculated")
 
         while True:
             print("\n")
-            #MainConsole.print_menu()
+            MainConsole.print_menu()
             user_input = input("Please enter your choice: ")
             parsed_input = user_input.split()
             operation = parsed_input[0]
@@ -610,16 +621,26 @@ class MainConsole:
                 did = parameters[0]
                 option = parameters[1]
                 if option == '-c':
-                    print(f"The stems for document {did} are: {bpt.retrieve(did)}")
+                    print(f"The categories for document {did} are: {bpt_categories.retrieve(did)}")
                 else:
-                    print(f"The categories for document {did} are: {bpt.retrieve(did)}")
+                    stem_collection = set()
+                    result = bpt__term.retrieve(did)
+                    for stem in result:
+                        stem_collection.update(stem)
+                    print(f"The stems for document {did} are: {stem_collection}")
             elif operation == 'C':
                 did = parameters[0]
                 option = parameters[1]
                 if option == '-c':
-                    print(f"The count of unique terms for document {did} is: {len(bpt.retrieve(did))}")
+                    #Remove dupliates by using set
+                    stem_collection = set()
+                    result = bpt__term.retrieve(did)
+                    for stem in result:
+                        stem_collection.update(stem)
+                    print(f"The count of unique terms for document {did} is: {len(stem_collection)}")
                 else:
-                    print(f"The count of categories for document {did} is: {len(bpt.retrieve(did))}")
+                    categories_set = bpt_categories.retrieve(did)
+                    print(f"The count of categories for document {did} is: {len(categories_set)}")
             else:
                 print("Invalid operation")
 
