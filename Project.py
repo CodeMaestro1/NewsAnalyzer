@@ -1,6 +1,7 @@
 from __future__ import annotations
 import re
 from traceback import print_tb
+from turtle import st
 from typing import Self
 from openpyxl.styles import Font
 from math import floor
@@ -489,15 +490,12 @@ class jaccard_index:
         """
         Calculate the jaccard index for each stem and category
         """
-        print("Initial self.category:", self.category)  # Debug line
         for stem_key, term_value in self.stem.items():
             self.jaccard_index[stem_key] = {}
             term_docs = set(self.get_term_docs(term_value))
             category_key = None
             for category_key, category_docs in self.category.items():
-                #print("Current category_key and category_docs:", category_key, category_docs)  # Debug line
                 category_docs_set = set(category_docs)
-                #print("This is the category docs set", category_docs_set)
                 intersection = len(term_docs & category_docs_set)
                 union = len(term_docs | category_docs)
                 self.jaccard_index[stem_key][category_key] = intersection / union
@@ -511,12 +509,9 @@ class jaccard_index:
         term_value_set = set(term_value)
         for doc_id, terms in self.term.items():
             for term_list in terms:
-                #print("This is the term list", term_list)
-                #print("This is the term value set", term_value_set)
                 term_list_set = {term_list}
                 if term_value_set & term_list_set:  
                     term_docs.append(doc_id)
-        #print("This is the term docs", term_docs)
         return set(term_docs)  # remove duplicates
 
     def get_most_relevant_stems_for_category(self, category, k):
@@ -592,7 +587,6 @@ class MainConsole:
         jaccard_instance =jaccard_index(returned_data_categories, returned_data_term, returned_data_stems)
         jaccard_index_value = jaccard_instance.calculate_jaccard_index()
         print("Jaccard Index has been calculated")
-        print(returned_data_categories)
 
         while True:
             print("\n")
@@ -615,7 +609,7 @@ class MainConsole:
             elif operation == '$':
                 stem = parameters[0]
                 category = parameters[1]
-                print(f"The Jaccard Index for the pair ({stem}, {category}) is: {jaccard_index_value}")
+                print(f"The Jaccard Index for the pair ({stem}, {category}) is: {jaccard_index_value[stem][category]}")
             elif operation == '*':
                 try:
                     filename = parameters[0]
@@ -661,7 +655,9 @@ class MainConsole:
                         print(f"Document {did} does not exist")
                         continue
                     print(f"The count of categories for document {did} is: {len(categories_set)}")
-            elif operation == 'Q':
+            elif operation == 'Q': # Exit the program.Not available to the user but its a nice feature to have
+                print("So you found my little secret....Terminating the program....")
+                print("Thank you for using our application!")
                 print("Goodbye!")
                 break
             else:
@@ -675,8 +671,8 @@ class MainConsole:
               "# <stem> <k> : Display the <k> most relevant categories (based on Jaccard Index) for a specific stem. \n" +
               "$ <stem> <category>: Provides the Jaccard Index for a given pair (stem, category). \n" +
               "* <filename>.<filetype> : Saves all (category, stem) pairs along with their Jaccard Index in a format (stem category Jaccard_Index) to the specified file\n" +
-              "P <did> -c : Fetch all the stems present in the document linked to a specific code id.\n" +
-              "P <did> -t : Display all the categories associated with the document identified by the code id.\n" +
+              "P <did> -c : Display all the categories associated with the document identified by the code id.\n" +
+              "P <did> -t : Fetch all the stems present in the document linked to a specific code id.\n" +
               "C <did> -c : Calculate and display the count of unique terms within the document specified by the code id.\n" +
               "C <did> -t : Calculate and display the count of categories assigned to the document with the code id")
 
