@@ -1,4 +1,6 @@
 from __future__ import annotations
+import re
+from traceback import print_tb
 from typing import Self
 from openpyxl.styles import Font
 from math import floor
@@ -370,22 +372,12 @@ class BPlusTree(object):
 class read_files:
     @staticmethod
     def read_pairs_from_file(file_name, bpt_instance):
-        """This method is used to read the files and store them in sets and in the BPlusTree data structure.
-
-        Args:
-            file_name (string): The file name. 
-            bpt_instance (BplusInstance): The BPlusTree instance.
-
-        Raises:
-            ValueError: file_name must be a string.
-            ValueError: File file_name does not exist.
-
-        Returns:
-            set: The return set that contains the data from the file.
+        """
+        Reads pairs from a file and stores them in the keys dictionary.
         """
         keys = {}
         already_inserted = set()
-        b_plus_data_set =set()
+        bplus_set = set()
         try:
             if not isinstance(file_name, str):
                 raise ValueError("file_name must be a string.")
@@ -395,7 +387,7 @@ class read_files:
             print(f"An error occurred: {e}")
         
         try:
-            with open(file_name, 'r', encoding = "latin1") as file:
+            with open(file_name, 'r', encoding = "utf-8") as file:
                 for line in file:
                     elements = line.split()
                     if len(elements) >= 2:
@@ -419,20 +411,19 @@ class read_files:
                             value = elements[1]
 
                             if key in already_inserted:
-                                keys[key].add(value)
+                                if value in bplus_set:
+                                    keys[key].add(value)
+                                    bpt_instance.retrieve(key).add(value)
+                                else:
+                                    keys[key].add(value)
+                                    bpt_instance.insert(value, {key})
                             else:
-                                already_inserted.add(value)
+                                already_inserted.add(key)
                                 keys[key] = {value}
-                            
-                            ################For the BplusDataStructure##################
-                            if value in b_plus_data_set:
-                                bpt_instance.retrieve(value).append(key)
-                                keys[key].add(value)
-                            else:
-                                b_plus_data_set.add(value)
-                                bpt_instance.insert(value, {key})
-                                keys[key] = {value}
-
+                                if value in bplus_set:
+                                    bpt_instance.retrieve(value).add(key)
+                                else:
+                                    bpt_instance.insert(value, {key})
         except IOError:
             print(f"Could not read file: {file_name}")
 
@@ -440,8 +431,6 @@ class read_files:
         return keys
     
 class write_files:
-    """This class is used to write the data to a file.
-    """
     def __init__(self, file_name, data_to_write, type_of_file):
         try:
             if not isinstance(file_name, str):
@@ -490,8 +479,6 @@ class write_files:
                 return
                         
 class jaccard_index:
-    """This class is used to calculate the jaccard index for each stem and category.
-    """
     def __init__(self, category, term, stem):
         self.category = category
         self.term = term
@@ -502,12 +489,15 @@ class jaccard_index:
         """
         Calculate the jaccard index for each stem and category
         """
+        print("Initial self.category:", self.category)  # Debug line
         for stem_key, term_value in self.stem.items():
             self.jaccard_index[stem_key] = {}
             term_docs = set(self.get_term_docs(term_value))
             category_key = None
             for category_key, category_docs in self.category.items():
+                #print("Current category_key and category_docs:", category_key, category_docs)  # Debug line
                 category_docs_set = set(category_docs)
+                #print("This is the category docs set", category_docs_set)
                 intersection = len(term_docs & category_docs_set)
                 union = len(term_docs | category_docs)
                 self.jaccard_index[stem_key][category_key] = intersection / union
@@ -521,10 +511,13 @@ class jaccard_index:
         term_value_set = set(term_value)
         for doc_id, terms in self.term.items():
             for term_list in terms:
+                #print("This is the term list", term_list)
+                #print("This is the term value set", term_value_set)
                 term_list_set = {term_list}
-                if term_value_set & term_list_set:  # Use set intersection operation
+                if term_value_set & term_list_set:  
                     term_docs.append(doc_id)
-        return list(set(term_docs))  # remove duplicates
+        #print("This is the term docs", term_docs)
+        return set(term_docs)  # remove duplicates
 
     def get_most_relevant_stems_for_category(self, category, k):
         """
@@ -575,26 +568,23 @@ class jaccard_index:
 
 
 class MainConsole:
-    """This class is used to run the program.
-
-    Call the @staticmethod main() to run the program.
-    """
     @staticmethod
     def main():
         print("Welcome to our application!")
-        file_to_read_categories = r"C:\Users\mypc1\Desktop\Project_1\dataforproject1\rcv1-v2.topics.qrels.txt"
-        file_to_read_term = r"C:\Users\mypc1\Desktop\Project_1\dataforproject1\lyrl2004_vectors_train.dat.txt"
-        file_to_read_stems = r"C:\Users\mypc1\Desktop\Project_1\dataforproject1\stem.termid.idf.map.txt"
+        #file_to_read_categories = r"C:\Users\mypc1\Desktop\Project_1\dataforproject1\rcv1-v2.topics.qrels.txt"
+        #file_to_read_term = r"C:\Users\mypc1\Desktop\Project_1\dataforproject1\lyrl2004_vectors_train.dat.txt"
+        #file_to_read_stems = r"C:\Users\mypc1\Desktop\Project_1\dataforproject1\stem.termid.idf.map.txt"
 
         #Dont forget to change the path based on your computer
-        #file_to_read_categories = r"C:\Users\mypc1\Desktop\Project_1\TestFile\category_docId.txt"
-        #file_to_read_term = r"C:\Users\mypc1\Desktop\Project_1\TestFile\docID_term.txt"
-        #file_to_read_stems = r"C:\Users\mypc1\Desktop\Project_1\TestFile\stem_term.txt"
+        file_to_read_categories = r"C:\Users\mypc1\Desktop\Project_1\TestFile\category_docId.txt"
+        file_to_read_term = r"C:\Users\mypc1\Desktop\Project_1\TestFile\docID_term.txt"
+        file_to_read_stems = r"C:\Users\mypc1\Desktop\Project_1\TestFile\stem_term.txt"
         
         order_of_tree = 10
         bpt_categories = BPlusTree(order_of_tree)
         bpt__term = BPlusTree(order_of_tree)
         bpt_stems = BPlusTree(order_of_tree)
+
 
         returned_data_categories = read_files.read_pairs_from_file(file_to_read_categories, bpt_categories) # Calling the method and storing the return value
         returned_data_term = read_files.read_pairs_from_file(file_to_read_term, bpt__term)
@@ -602,6 +592,7 @@ class MainConsole:
         jaccard_instance =jaccard_index(returned_data_categories, returned_data_term, returned_data_stems)
         jaccard_index_value = jaccard_instance.calculate_jaccard_index()
         print("Jaccard Index has been calculated")
+        print(returned_data_categories)
 
         while True:
             print("\n")
@@ -624,7 +615,6 @@ class MainConsole:
             elif operation == '$':
                 stem = parameters[0]
                 category = parameters[1]
-                jaccard_index_value = jaccard_instance.jaccard_index.jaccard_index[stem][category]
                 print(f"The Jaccard Index for the pair ({stem}, {category}) is: {jaccard_index_value}")
             elif operation == '*':
                 try:
@@ -671,8 +661,12 @@ class MainConsole:
                         print(f"Document {did} does not exist")
                         continue
                     print(f"The count of categories for document {did} is: {len(categories_set)}")
+            elif operation == 'Q':
+                print("Goodbye!")
+                break
             else:
                 print("Invalid operation")
+
 
     @staticmethod
     def print_menu():
