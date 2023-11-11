@@ -370,8 +370,18 @@ class BPlusTree(object):
 class read_files:
     @staticmethod
     def read_pairs_from_file(file_name, bpt_instance):
-        """
-        Reads pairs from a file and stores them in the keys dictionary.
+        """This method is used to read the files and store them in sets and in the BPlusTree data structure.
+
+        Args:
+            file_name (string): The file name. 
+            bpt_instance (BplusInstance): The BPlusTree instance.
+
+        Raises:
+            ValueError: file_name must be a string.
+            ValueError: File file_name does not exist.
+
+        Returns:
+            set: The return set that contains the data from the file.
         """
         keys = {}
         already_inserted = set()
@@ -430,6 +440,8 @@ class read_files:
         return keys
     
 class write_files:
+    """This class is used to write the data to a file.
+    """
     def __init__(self, file_name, data_to_write, type_of_file):
         try:
             if not isinstance(file_name, str):
@@ -478,6 +490,8 @@ class write_files:
                 return
                         
 class jaccard_index:
+    """This class is used to calculate the jaccard index for each stem and category.
+    """
     def __init__(self, category, term, stem):
         self.category = category
         self.term = term
@@ -561,6 +575,10 @@ class jaccard_index:
 
 
 class MainConsole:
+    """This class is used to run the program.
+
+    Call the @staticmethod main() to run the program.
+    """
     @staticmethod
     def main():
         print("Welcome to our application!")
@@ -621,10 +639,16 @@ class MainConsole:
                 did = parameters[0]
                 option = parameters[1]
                 if option == '-c':
+                    if bpt_categories.retrieve(did) is None:
+                        print(f"Document {did} does not exist")
+                        continue
                     print(f"The categories for document {did} are: {bpt_categories.retrieve(did)}")
                 else:
                     stem_collection = set()
                     result = bpt__term.retrieve(did)
+                    if result is None:
+                        print(f"Document {did} does not exist")
+                        continue
                     for stem in result:
                         stem_collection.update(stem)
                     print(f"The stems for document {did} are: {stem_collection}")
@@ -635,11 +659,17 @@ class MainConsole:
                     #Remove dupliates by using set
                     stem_collection = set()
                     result = bpt__term.retrieve(did)
+                    if result is None:
+                        print(f"Document {did} does not exist")
+                        continue
                     for stem in result:
                         stem_collection.update(stem)
                     print(f"The count of unique terms for document {did} is: {len(stem_collection)}")
                 else:
                     categories_set = bpt_categories.retrieve(did)
+                    if categories_set is None:
+                        print(f"Document {did} does not exist")
+                        continue
                     print(f"The count of categories for document {did} is: {len(categories_set)}")
             else:
                 print("Invalid operation")
