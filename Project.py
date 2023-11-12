@@ -443,7 +443,7 @@ class read_files:
                                 if key in already_inserted:
                                     if value in bplus_set:
                                         keys[key].add(value)
-                                        bpt_instance.retrieve(key).append(value)
+                                        bpt_instance.retrieve(key).add(value)
                                     else:
                                         keys[key].add(value)
                                         bpt_instance.insert(value, {key})
@@ -451,7 +451,7 @@ class read_files:
                                     already_inserted.add(key)
                                     keys[key] = {value}
                                     if value in bplus_set:
-                                        bpt_instance.retrieve(value).append(key)
+                                        bpt_instance.retrieve(value).add(key)
                                     else:
                                         bpt_instance.insert(value, {key})
         except IOError:
@@ -623,8 +623,6 @@ class MainConsole:
         jaccard_instance =jaccard_index(returned_data_categories, returned_data_term, returned_data_stems)
         jaccard_index_value = jaccard_instance.calculate_jaccard_index()
         print("Jaccard Index has been calculated")
-
-        bpt__term.printTree() #-------------------> This is the tree that contains the stems
 
         while True:
             print("\n")
