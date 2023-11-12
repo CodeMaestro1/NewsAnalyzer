@@ -1,6 +1,6 @@
 from __future__ import annotations
 from openpyxl.styles import Font
-from math import exp, floor, log
+from math import floor
 from random import randint
 import logging
 import logging.config
@@ -658,43 +658,53 @@ class MainConsole:
             elif operation == 'P':
                     did = parameters[0]
                     option = parameters[1]
-                    if option == '-c':
-                        if bpt_categories.retrieve(did) is None:
-                            print(f"Document {did} does not exist")
-                            continue
-                        print(f"The categories for document {did} are: {bpt_categories.retrieve(did)}")
-                        logger.info(f"The user requested the categories for a given document with dociD: {did}")
+                    if option != '-c' or option != '-t':
+                        print("Invalid option")
+                        logger.info("The user entered an invalid option")
+                        continue
                     else:
-                        stem_collection = set()
-                        result = bpt__term.retrieve(did)
-                        if result is None:
-                            print(f"Document {did} does not exist")
-                            continue
-                        for stem in result:
-                            stem_collection.update(stem)
-                        print(f"The stems for document {did} are: {stem_collection}")
-                        logger.info(f"The user requested the stems for a given document with docID: {did}")
+                        if option == '-c':
+                            if bpt_categories.retrieve(did) is None:
+                                print(f"Document {did} does not exist")
+                                continue
+                            print(f"The categories for document {did} are: {bpt_categories.retrieve(did)}")
+                            logger.info(f"The user requested the categories for a given document with dociD: {did}")
+                        else:
+                            stem_collection = set()
+                            result = bpt__term.retrieve(did)
+                            if result is None:
+                                print(f"Document {did} does not exist")
+                                continue
+                            for stem in result:
+                                stem_collection.update(stem)
+                            print(f"The stems for document {did} are: {stem_collection}")
+                            logger.info(f"The user requested the stems for a given document with docID: {did}")
             elif operation == 'C':
                     did = parameters[0]
                     option = parameters[1]
-                    if option == '-c':
-                        #Remove dupliates by using set
-                        stem_collection = set()
-                        result = bpt__term.retrieve(did)
-                        if result is None:
-                            print(f"Document {did} does not exist")
-                            continue
-                        for stem in result:
-                            stem_collection.update(stem)
-                        print(f"The count of unique terms for document {did} is: {len(stem_collection)}")
-                        logger.info(f"The user requested the count of unique terms for a given document with docID: {did}")
+                    if option != '-c' or option != '-t':
+                        print("Invalid option")
+                        logger.info("The user entered an invalid option")
+                        continue
                     else:
-                        categories_set = bpt_categories.retrieve(did)
-                        if categories_set is None:
-                            print(f"Document {did} does not exist")
-                            continue
-                        print(f"The count of categories for document {did} is: {len(categories_set)}")
-                        logger.info(f"The user requested the count of categories for a given document with docID: {did}")
+                        if option == '-c':
+                            #Remove dupliates by using set
+                            stem_collection = set()
+                            result = bpt__term.retrieve(did)
+                            if result is None:
+                                print(f"Document {did} does not exist")
+                                continue
+                            for stem in result:
+                                stem_collection.update(stem)
+                            print(f"The count of unique terms for document {did} is: {len(stem_collection)}")
+                            logger.info(f"The user requested the count of unique terms for a given document with docID: {did}")
+                        else:
+                            categories_set = bpt_categories.retrieve(did)
+                            if categories_set is None:
+                                print(f"Document {did} does not exist")
+                                continue
+                            print(f"The count of categories for document {did} is: {len(categories_set)}")
+                            logger.info(f"The user requested the count of categories for a given document with docID: {did}")
             elif operation == 'Q': # Exit the program.Not available to the user but its a nice feature to have
                     print("So you found my little secret....Terminating the program....")
                     print("Thank you for using our application!")
