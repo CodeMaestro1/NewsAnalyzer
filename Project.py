@@ -1,14 +1,25 @@
 from __future__ import annotations
-import re
-from traceback import print_tb
-from turtle import st
-from typing import Self
 from openpyxl.styles import Font
-from math import floor
+from math import exp, floor, log
 from random import randint
+import logging
+import logging.config
 import os
 import json
 import openpyxl
+import logging
+import logging.config
+
+
+#initialize logme.txt
+#In order words manually overwrite the file due to the fact that the overwrite option in the logging module is not working
+with open('logme.txt', 'w') as file_logger:                 
+  file_logger.write(' ')
+
+logging.config.fileConfig(fname='myeditorlog.conf', disable_existing_loggers = False)
+
+# Get the logger specified in the file
+logger = logging.getLogger(__name__)
 
 
 ###########################################BplustreeStart##############################################
@@ -372,6 +383,14 @@ class BPlusTree(object):
 
 class read_files:
     @staticmethod
+    def is_utf8(line):
+        try:
+            line.encode('utf-8')
+            return True
+        except UnicodeDecodeError:
+            return False
+
+    @staticmethod
     def read_pairs_from_file(file_name, bpt_instance):
         """
         Reads pairs from a file and stores them in the keys dictionary.
@@ -388,43 +407,47 @@ class read_files:
             print(f"An error occurred: {e}")
         
         try:
-            with open(file_name, 'r', encoding = "utf-8") as file:
+            with open(file_name, 'r', encoding = "latin1") as file:
                 for line in file:
-                    elements = line.split()
-                    if len(elements) >= 2:
-                        if ":" in line:
-                            document_id = elements[0]  # Extract document ID
-                            term = set()
+                    # '\n' is a newline,'\t' is a tab,'\v' is a vertical tab,'\b' is a backspace,'\0' is a null character.
+                    if line[0] in ['#', '%', '^', '_', '!', '@', '$', '*', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', ' ' , '\n', '\t', '\v', '\b', '\0']:
+                        continue
+                    else:
+                        elements = line.split()
+                        if len(elements) >= 2:
+                            if ":" in line:
+                                document_id = elements[0]  # Extract document ID
+                                term = set()
 
-                            for element in elements[1:]:
-                                if ':' in element:
-                                    term.add(element.split(':')[0])  # Add only the term before colon to the set
+                                for element in elements[1:]:
+                                    if ':' in element:
+                                        term.add(element.split(':')[0])  # Add only the term before colon to the set
 
-                            if document_id in already_inserted:
-                                bpt_instance.retrieve(document_id).update(term)
-                                keys[document_id].update(term)
-                            else:
-                                already_inserted.add(document_id)
-                                bpt_instance.insert(document_id, term)
-                                keys[document_id] = term
-                        else:
-                            key = elements[0]
-                            value = elements[1]
-
-                            if key in already_inserted:
-                                if value in bplus_set:
-                                    keys[key].add(value)
-                                    bpt_instance.retrieve(key).add(value)
+                                if document_id in already_inserted:
+                                    bpt_instance.retrieve(document_id).update(term)
+                                    keys[document_id].update(term)
                                 else:
-                                    keys[key].add(value)
-                                    bpt_instance.insert(value, {key})
+                                    already_inserted.add(document_id)
+                                    bpt_instance.insert(document_id, term)
+                                    keys[document_id] = term
                             else:
-                                already_inserted.add(key)
-                                keys[key] = {value}
-                                if value in bplus_set:
-                                    bpt_instance.retrieve(value).add(key)
+                                key = elements[0]
+                                value = elements[1]
+
+                                if key in already_inserted:
+                                    if value in bplus_set:
+                                        keys[key].add(value)
+                                        bpt_instance.retrieve(key).add(value)
+                                    else:
+                                        keys[key].add(value)
+                                        bpt_instance.insert(value, {key})
                                 else:
-                                    bpt_instance.insert(value, {key})
+                                    already_inserted.add(key)
+                                    keys[key] = {value}
+                                    if value in bplus_set:
+                                        bpt_instance.retrieve(value).add(key)
+                                    else:
+                                        bpt_instance.insert(value, {key})
         except IOError:
             print(f"Could not read file: {file_name}")
 
@@ -574,6 +597,11 @@ class MainConsole:
         file_to_read_categories = r"C:\Users\mypc1\Desktop\Project_1\TestFile\category_docId.txt"
         file_to_read_term = r"C:\Users\mypc1\Desktop\Project_1\TestFile\docID_term.txt"
         file_to_read_stems = r"C:\Users\mypc1\Desktop\Project_1\TestFile\stem_term.txt"
+
+        #Colab paths ---Personal use
+        #file_to_read_categories = "/content/drive/MyDrive/Colab Notebooks/TestData/category_docId.txt"
+        #file_to_read_term = "/content/drive/MyDrive/Colab Notebooks/TestData/docID_term.txt"
+        #file_to_read_stems = "/content/drive/MyDrive/Colab Notebooks/TestData/stem_term.txt"
         
         order_of_tree = 10
         bpt_categories = BPlusTree(order_of_tree)
@@ -593,75 +621,89 @@ class MainConsole:
             MainConsole.print_menu()
             user_input = input("Please enter your choice: ")
             parsed_input = user_input.split()
-            operation = parsed_input[0]
+            try:
+                operation = parsed_input[0] 
+            except IndexError:
+                print("Error: Empty input. Please enter a valid command.") # If the user enters an empty input, the program will not crash
+                continue
             parameters = parsed_input[1:]
-
             if operation == '@':
                 category = parameters[0]
                 k = int(parameters[1])
                 most_relevant_stems = jaccard_instance.get_most_relevant_stems_for_category(category, k)
                 print(f"The top {k} stems for category {category} are: {most_relevant_stems}")
+                logger.info(f"the user requested the top {k} stems for the category: {category}")
             elif operation == '#':
-                stem = parameters[0]
-                k = int(parameters[1])
-                most_relevant_categories = jaccard_instance.jaccard_index.get_most_relevant_categories_for_stem(stem, k)
-                print(f"The top {k} categories for stem {stem} are: {most_relevant_categories}")
+                    stem = parameters[0]
+                    k = int(parameters[1])
+                    most_relevant_categories = jaccard_instance.get_most_relevant_categories_for_stem(stem, k)
+                    print(f"The top {k} categories for stem {stem} are: {most_relevant_categories}")
+                    logger.info(f"The top {k} categories for stem {stem} are: {most_relevant_categories}")
+                    logger.info(f"The user requested the top {k} categories for a given stem: {stem}")
             elif operation == '$':
-                stem = parameters[0]
-                category = parameters[1]
-                print(f"The Jaccard Index for the pair ({stem}, {category}) is: {jaccard_index_value[stem][category]}")
+                    stem = parameters[0]
+                    category = parameters[1]
+                    print(f"The Jaccard Index for the pair ({stem}, {category}) is: {jaccard_index_value[stem][category]}")
+                    logger.info(f"The user requested the Jaccard Index for this pair: ({stem} , {category}) ")
             elif operation == '*':
-                try:
-                    filename = parameters[0]
-                    filename, file_type = filename.split('.')
-                    writer = write_files(filename, jaccard_index_value, file_type)
-                    writer.write_to_file()
-                    print(f"Data has been written to file: {filename}.{file_type}")
-                except Exception as e:
-                    print(f"An error occurred: {e}")
+                    try:
+                        filename = parameters[0]
+                        filename, file_type = filename.split('.')
+                        writer = write_files(filename, jaccard_index_value, file_type)
+                        writer.write_to_file()
+                        print(f"Data has been written to file: {filename}.{file_type}")
+                        logger.info(f"The user requested to write the data to a file with name: {filename}.{file_type}")
+                    except Exception as e:
+                        print(f"An error occurred: {e}")
             elif operation == 'P':
-                did = parameters[0]
-                option = parameters[1]
-                if option == '-c':
-                    if bpt_categories.retrieve(did) is None:
-                        print(f"Document {did} does not exist")
-                        continue
-                    print(f"The categories for document {did} are: {bpt_categories.retrieve(did)}")
-                else:
-                    stem_collection = set()
-                    result = bpt__term.retrieve(did)
-                    if result is None:
-                        print(f"Document {did} does not exist")
-                        continue
-                    for stem in result:
-                        stem_collection.update(stem)
-                    print(f"The stems for document {did} are: {stem_collection}")
+                    did = parameters[0]
+                    option = parameters[1]
+                    if option == '-c':
+                        if bpt_categories.retrieve(did) is None:
+                            print(f"Document {did} does not exist")
+                            continue
+                        print(f"The categories for document {did} are: {bpt_categories.retrieve(did)}")
+                        logger.info(f"The user requested the categories for a given document with dociD: {did}")
+                    else:
+                        stem_collection = set()
+                        result = bpt__term.retrieve(did)
+                        if result is None:
+                            print(f"Document {did} does not exist")
+                            continue
+                        for stem in result:
+                            stem_collection.update(stem)
+                        print(f"The stems for document {did} are: {stem_collection}")
+                        logger.info(f"The user requested the stems for a given document with docID: {did}")
             elif operation == 'C':
-                did = parameters[0]
-                option = parameters[1]
-                if option == '-c':
-                    #Remove dupliates by using set
-                    stem_collection = set()
-                    result = bpt__term.retrieve(did)
-                    if result is None:
-                        print(f"Document {did} does not exist")
-                        continue
-                    for stem in result:
-                        stem_collection.update(stem)
-                    print(f"The count of unique terms for document {did} is: {len(stem_collection)}")
-                else:
-                    categories_set = bpt_categories.retrieve(did)
-                    if categories_set is None:
-                        print(f"Document {did} does not exist")
-                        continue
-                    print(f"The count of categories for document {did} is: {len(categories_set)}")
+                    did = parameters[0]
+                    option = parameters[1]
+                    if option == '-c':
+                        #Remove dupliates by using set
+                        stem_collection = set()
+                        result = bpt__term.retrieve(did)
+                        if result is None:
+                            print(f"Document {did} does not exist")
+                            continue
+                        for stem in result:
+                            stem_collection.update(stem)
+                        print(f"The count of unique terms for document {did} is: {len(stem_collection)}")
+                        logger.info(f"The user requested the count of unique terms for a given document with docID: {did}")
+                    else:
+                        categories_set = bpt_categories.retrieve(did)
+                        if categories_set is None:
+                            print(f"Document {did} does not exist")
+                            continue
+                        print(f"The count of categories for document {did} is: {len(categories_set)}")
+                        logger.info(f"The user requested the count of categories for a given document with docID: {did}")
             elif operation == 'Q': # Exit the program.Not available to the user but its a nice feature to have
-                print("So you found my little secret....Terminating the program....")
-                print("Thank you for using our application!")
-                print("Goodbye!")
-                break
+                    print("So you found my little secret....Terminating the program....")
+                    print("Thank you for using our application!")
+                    print("Goodbye!")
+                    logger.info("The user requested to exit the program")
+                    break
             else:
-                print("Invalid operation")
+                    print("Invalid operation")
+                    logger.info("The user entered an invalid operation")
 
 
     @staticmethod
