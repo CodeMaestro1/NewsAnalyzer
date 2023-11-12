@@ -410,7 +410,7 @@ class read_files:
             with open(file_name, 'r', encoding = "latin1") as file:
                 for line in file:
                     # '\n' is a newline,'\t' is a tab,'\v' is a vertical tab,'\b' is a backspace,'\0' is a null character.
-                    if line[0] in ['#', '%', '^', '_', '!', '@', '$', '*', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', ' ' , '\n', '\t', '\v', '\b', '\0']:
+                    if line[0] in ['#', '%', '^', '_', '!', '@', '$', '*', ' ' , '\n', '\t', '\v', '\b', '\0']:
                         continue
                     else:
                         elements = line.split()
@@ -424,12 +424,18 @@ class read_files:
                                         term.add(element.split(':')[0])  # Add only the term before colon to the set
 
                                 if document_id in already_inserted:
-                                    bpt_instance.retrieve(document_id).update(term)
                                     keys[document_id].update(term)
+                                    if document_id in bplus_set:
+                                        bpt_instance.retrieve(document_id).add(term)
+                                    else:
+                                        bpt_instance.insert(document_id, term)
                                 else:
                                     already_inserted.add(document_id)
-                                    bpt_instance.insert(document_id, term)
                                     keys[document_id] = term
+                                    if document_id in bplus_set:
+                                        bpt_instance.retrieve(document_id).add(term)
+                                    else:
+                                        bpt_instance.insert(document_id, term)
                             else:
                                 key = elements[0]
                                 value = elements[1]
@@ -437,7 +443,7 @@ class read_files:
                                 if key in already_inserted:
                                     if value in bplus_set:
                                         keys[key].add(value)
-                                        bpt_instance.retrieve(key).add(value)
+                                        bpt_instance.retrieve(key).append(value)
                                     else:
                                         keys[key].add(value)
                                         bpt_instance.insert(value, {key})
@@ -445,7 +451,7 @@ class read_files:
                                     already_inserted.add(key)
                                     keys[key] = {value}
                                     if value in bplus_set:
-                                        bpt_instance.retrieve(value).add(key)
+                                        bpt_instance.retrieve(value).append(key)
                                     else:
                                         bpt_instance.insert(value, {key})
         except IOError:
@@ -608,6 +614,8 @@ class MainConsole:
         bpt__term = BPlusTree(order_of_tree)
         bpt_stems = BPlusTree(order_of_tree)
 
+        
+
 
         returned_data_categories = read_files.read_pairs_from_file(file_to_read_categories, bpt_categories) # Calling the method and storing the return value
         returned_data_term = read_files.read_pairs_from_file(file_to_read_term, bpt__term)
@@ -615,6 +623,8 @@ class MainConsole:
         jaccard_instance =jaccard_index(returned_data_categories, returned_data_term, returned_data_stems)
         jaccard_index_value = jaccard_instance.calculate_jaccard_index()
         print("Jaccard Index has been calculated")
+
+        bpt__term.printTree() #-------------------> This is the tree that contains the stems
 
         while True:
             print("\n")
@@ -658,7 +668,7 @@ class MainConsole:
             elif operation == 'P':
                     did = parameters[0]
                     option = parameters[1]
-                    if option != '-c' or option != '-t':
+                    if option != '-c' and option != '-t':
                         print("Invalid option")
                         logger.info("The user entered an invalid option")
                         continue
@@ -682,7 +692,7 @@ class MainConsole:
             elif operation == 'C':
                     did = parameters[0]
                     option = parameters[1]
-                    if option != '-c' or option != '-t':
+                    if option != '-c' and option != '-t':
                         print("Invalid option")
                         logger.info("The user entered an invalid option")
                         continue
