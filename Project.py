@@ -382,14 +382,11 @@ class BPlusTree(object):
 #################################################MainStart#############################################
 
 class read_files:
-    @staticmethod
-    def is_utf8(line):
-        try:
-            line.encode('utf-8')
-            return True
-        except UnicodeDecodeError:
-            return False
-
+    def process_line(elements, already_inserted, keys, bpt_instance):
+        """
+        Processes a line from a file and stores the data in the keys dictionary.
+        """
+        
     @staticmethod
     def read_pairs_from_file(file_name, bpt_instance):
         """
@@ -417,35 +414,36 @@ class read_files:
                         if len(elements) >= 2:
                             if ":" in line:
                                 document_id = elements[0]  # Extract document ID
-                                term = set()
+                                term = []
 
                                 for element in elements[1:]:
                                     if ':' in element:
-                                        term.add(element.split(':')[0])  # Add only the term before colon to the set
+                                        term.append(element.split(':')[0])  # Add only the term before colon to the list
 
                                 if document_id in already_inserted:
                                     keys[document_id].update(term)
                                     if document_id in bplus_set:
-                                        bpt_instance.retrieve(document_id).add(term)
+                                        bpt_instance.retrieve(document_id).append(term)
                                     else:
+                                        bplus_set.add(document_id)
                                         bpt_instance.insert(document_id, term)
                                 else:
                                     already_inserted.add(document_id)
                                     keys[document_id] = term
                                     if document_id in bplus_set:
-                                        bpt_instance.retrieve(document_id).add(term)
+                                        bpt_instance.retrieve(document_id).append(term)
                                     else:
+                                        bplus_set.add(document_id)
                                         bpt_instance.insert(document_id, term)
                             else:
                                 key = elements[0]
                                 value = elements[1]
 
                                 if key in already_inserted:
+                                    keys[key].add(value)
                                     if value in bplus_set:
-                                        keys[key].add(value)
                                         bpt_instance.retrieve(key).add(value)
                                     else:
-                                        keys[key].add(value)
                                         bpt_instance.insert(value, {key})
                                 else:
                                     already_inserted.add(key)
@@ -614,9 +612,6 @@ class MainConsole:
         bpt__term = BPlusTree(order_of_tree)
         bpt_stems = BPlusTree(order_of_tree)
 
-        
-
-
         returned_data_categories = read_files.read_pairs_from_file(file_to_read_categories, bpt_categories) # Calling the method and storing the return value
         returned_data_term = read_files.read_pairs_from_file(file_to_read_term, bpt__term)
         returned_data_stems = read_files.read_pairs_from_file(file_to_read_stems, bpt_stems)
@@ -678,13 +673,21 @@ class MainConsole:
                             print(f"The categories for document {did} are: {bpt_categories.retrieve(did)}")
                             logger.info(f"The user requested the categories for a given document with dociD: {did}")
                         else:
-                            stem_collection = set()
+                            stem_collection = []
                             result = bpt__term.retrieve(did)
                             if result is None:
                                 print(f"Document {did} does not exist")
                                 continue
-                            for stem in result:
-                                stem_collection.update(stem)
+                            for term in result:
+                                if isinstance(term, list): #This if statement is used to handle the case where a document has more than one term
+                                    for sub_term in term:
+                                        stem_to_print = bpt_stems.retrieve(sub_term)
+                                        if stem_to_print is not None:
+                                            stem_collection.extend(stem_to_print)
+                                else:
+                                    stem_to_print = bpt_stems.retrieve(term)
+                                    if stem_to_print is not None:
+                                        stem_collection.extend(stem_to_print)
                             print(f"The stems for document {did} are: {stem_collection}")
                             logger.info(f"The user requested the stems for a given document with docID: {did}")
             elif operation == 'C':
