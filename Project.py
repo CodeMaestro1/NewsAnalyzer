@@ -517,14 +517,13 @@ class jaccard_index:
         """
         Calculate the jaccard index for each stem and category
         """
-        for stem_key, term_value in self.stem.items():
+        term_docs_dict = {stem_key: set(self.get_term_docs(term_value)) for stem_key, term_value in self.stem.items()}
+        for stem_key, term_docs in term_docs_dict.items():
             self.jaccard_index[stem_key] = {}
-            term_docs = set(self.get_term_docs(term_value))
-            category_key = None
             for category_key, category_docs in self.category.items():
                 category_docs_set = set(category_docs)
                 intersection = len(term_docs & category_docs_set)
-                union = len(term_docs | category_docs)
+                union = len(term_docs | category_docs_set)
                 self.jaccard_index[stem_key][category_key] = intersection / union
         return self.jaccard_index
 
@@ -593,14 +592,14 @@ class MainConsole:
     @staticmethod
     def main():
         print("Welcome to our application!")
-        #file_to_read_categories = r"C:\Users\mypc1\Desktop\Project_1\dataforproject1\rcv1-v2.topics.qrels.txt"
-        #file_to_read_term = r"C:\Users\mypc1\Desktop\Project_1\dataforproject1\lyrl2004_vectors_train.dat.txt"
-        #file_to_read_stems = r"C:\Users\mypc1\Desktop\Project_1\dataforproject1\stem.termid.idf.map.txt"
+        file_to_read_categories = r"C:\Users\mypc1\Desktop\Project_1\dataforproject1\rcv1-v2.topics.qrels.txt"
+        file_to_read_term = r"C:\Users\mypc1\Desktop\Project_1\dataforproject1\lyrl2004_vectors_train.dat.txt"
+        file_to_read_stems = r"C:\Users\mypc1\Desktop\Project_1\dataforproject1\stem.termid.idf.map.txt"
 
         #Dont forget to change the path based on your computer
-        file_to_read_categories = r"C:\Users\mypc1\Desktop\Project_1\TestFile\category_docId.txt"
-        file_to_read_term = r"C:\Users\mypc1\Desktop\Project_1\TestFile\docID_term.txt"
-        file_to_read_stems = r"C:\Users\mypc1\Desktop\Project_1\TestFile\stem_term.txt"
+        #file_to_read_categories = r"C:\Users\mypc1\Desktop\Project_1\TestFile\category_docId.txt"
+        #file_to_read_term = r"C:\Users\mypc1\Desktop\Project_1\TestFile\docID_term.txt"
+        #file_to_read_stems = r"C:\Users\mypc1\Desktop\Project_1\TestFile\stem_term.txt"
 
         #Colab paths ---Personal use
         #file_to_read_categories = "/content/drive/MyDrive/Colab Notebooks/TestData/category_docId.txt"
