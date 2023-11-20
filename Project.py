@@ -382,11 +382,7 @@ class BPlusTree(object):
 #################################################MainStart#############################################
 
 class read_files:
-    def process_line(elements, already_inserted, keys, bpt_instance):
-        """
-        Processes a line from a file and stores the data in the keys dictionary.
-        """
-        
+  
     @staticmethod
     def read_pairs_from_file(file_name, bpt_instance):
         """
