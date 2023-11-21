@@ -1,3 +1,2 @@
- 2023-11-21 10:59:34,403 - __main__ - INFO - The user requested to write the data to a file with name: myyyyyyyfile.xlsx
-2023-11-21 10:59:56,074 - __main__ - INFO - The user requested to write the data to a file with name: json2t.json
-2023-11-21 11:00:49,115 - __main__ - INFO - The user requested to exit the program
+ 2023-11-21 16:06:06,013 - __main__ - INFO - The user requested to write the data to a file with name: secondTry.xlsx
+2023-11-21 16:07:56,418 - __main__ - INFO - The user requested to exit the program

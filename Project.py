@@ -530,12 +530,13 @@ class jaccard_index:
         Calculate the jaccard index for each stem and category
         """
         term_docs_dict = {stem_key: set(self.get_term_docs(term_value)) for stem_key, term_value in self.stem.items()}
+        category_docs_dict = {category_key: set(category_docs) for category_key, category_docs in self.category.items()}
+        
         for stem_key, term_docs in term_docs_dict.items():
             self.jaccard_index[stem_key] = {}
-            for category_key, category_docs in self.category.items():
-                category_docs_set = set(category_docs)
+            for category_key, category_docs_set in category_docs_dict.items():
                 intersection = len(term_docs & category_docs_set)
-                union = len(term_docs | category_docs_set)
+                union = len(term_docs) + len(category_docs_set) - intersection
                 self.jaccard_index[stem_key][category_key] = intersection / union
         return self.jaccard_index
 
