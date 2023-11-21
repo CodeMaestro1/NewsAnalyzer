@@ -492,12 +492,17 @@ class write_files:
         ws.title = "Jaccard Index"
         ws.append(["Stem", "Category", "Jaccard Index"])
 
-        rows = [[stem, category, jaccard_index] for stem, categories in self.data_to_write.items() for category, jaccard_index in categories.items()]
+        rows = (
+            [stem, category, jaccard_index]
+            for stem, categories in self.data_to_write.items()
+            for category, jaccard_index in categories.items()
+        )
 
         for row in rows:
             ws.append(row)
 
         wb.save(user_file)
+
     def write_to_file(self):
         if self.type_of_file is None or self.file_name is None:
             print("File type or file name is not defined.")
