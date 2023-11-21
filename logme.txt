@@ -1,1 +1,3 @@
- 
+ 2023-11-21 10:24:36,541 - __main__ - INFO - The user requested to write the data to a file with name: letssee.xlsx
+2023-11-21 10:24:46,408 - __main__ - INFO - The user requested to write the data to a file with name: myjson.json
+2023-11-21 10:25:59,029 - __main__ - INFO - The user requested to exit the program

@@ -473,34 +473,43 @@ class write_files:
             print(f"An error occurred: {e}")
             return
 
-    def write_to_file(self):
-            try:
-                if self.type_of_file is not  None or self.file_name is not None:
-                    user_file =  f"{self.file_name}.{self.type_of_file}"
-                    with open(user_file, 'w') as file:
-                        if self.type_of_file == "json":
-                            json_data = []
-                            for stem, categories in self.data_to_write.items():
-                                for category, jaccard_index in categories.items():
-                                    json_data.append({
-                                        'stem': stem,
-                                        'category': category,
-                                        'jaccardIndex': jaccard_index
-                                })
-                            json.dump(json_data, file)
+    def write_json(self, user_file):
+        json_data = [
+            {
+                'stem': stem,
+                'category': category,
+                'jaccardIndex': jaccard_index
+            }
+            for stem, categories in self.data_to_write.items()
+            for category, jaccard_index in categories.items()
+        ]
+        with open(user_file, 'w') as file:
+            json.dump(json_data, file)
 
-                        else:
-                            wb = openpyxl.Workbook()
-                            ws = wb.active
-                            ws.title = "Jaccard Index"
-                            ws.append(["Stem", "Category", "Jaccard Index"])
-                            for stem, categories in self.data_to_write.items():
-                                for category, jaccard_index in categories.items():
-                                    ws.append([stem, category, jaccard_index])
-                            wb.save(user_file)
-            except IOError:
-                print(f"Could not write to file: {self.file_name}")
-                return
+    def write_xlsx(self, user_file):
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = "Jaccard Index"
+        ws.append(["Stem", "Category", "Jaccard Index"])
+        for stem, categories in self.data_to_write.items():
+            for category, jaccard_index in categories.items():
+                ws.append([stem, category, jaccard_index])
+        wb.save(user_file)
+
+    def write_to_file(self):
+        if self.type_of_file is None or self.file_name is None:
+            print("File type or file name is not defined.")
+            return
+
+        user_file = f"{self.file_name}.{self.type_of_file}"
+
+        try:
+            if self.type_of_file == "json":
+                self.write_json(user_file)
+            else:
+                self.write_xlsx(user_file)
+        except IOError:
+            print(f"Could not write to file: {self.file_name}")
                         
 class jaccard_index:
     def __init__(self, category, term, stem):
@@ -588,14 +597,14 @@ class MainConsole:
     @staticmethod
     def main():
         print("Welcome to our application!")
-        file_to_read_categories = r"C:\Users\mypc1\Desktop\Project_1\dataforproject1\rcv1-v2.topics.qrels.txt"
-        file_to_read_term = r"C:\Users\mypc1\Desktop\Project_1\dataforproject1\lyrl2004_vectors_train.dat.txt"
-        file_to_read_stems = r"C:\Users\mypc1\Desktop\Project_1\dataforproject1\stem.termid.idf.map.txt"
+        #file_to_read_categories = r"C:\Users\mypc1\Desktop\Project_1\dataforproject1\rcv1-v2.topics.qrels.txt"
+        #file_to_read_term = r"C:\Users\mypc1\Desktop\Project_1\dataforproject1\lyrl2004_vectors_train.dat.txt"
+        #file_to_read_stems = r"C:\Users\mypc1\Desktop\Project_1\dataforproject1\stem.termid.idf.map.txt"
 
         #Dont forget to change the path based on your computer
-        #file_to_read_categories = r"C:\Users\mypc1\Desktop\Project_1\TestFile\category_docId.txt"
-        #file_to_read_term = r"C:\Users\mypc1\Desktop\Project_1\TestFile\docID_term.txt"
-        #file_to_read_stems = r"C:\Users\mypc1\Desktop\Project_1\TestFile\stem_term.txt"
+        file_to_read_categories = r"C:\Users\mypc1\Desktop\Project_1\TestFile\category_docId.txt"
+        file_to_read_term = r"C:\Users\mypc1\Desktop\Project_1\TestFile\docID_term.txt"
+        file_to_read_stems = r"C:\Users\mypc1\Desktop\Project_1\TestFile\stem_term.txt"
 
         #Colab paths ---Personal use
         #file_to_read_categories = "/content/drive/MyDrive/Colab Notebooks/TestData/category_docId.txt"
