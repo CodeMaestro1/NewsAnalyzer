@@ -1,2 +1,2 @@
- 2023-11-21 16:06:06,013 - __main__ - INFO - The user requested to write the data to a file with name: secondTry.xlsx
-2023-11-21 16:07:56,418 - __main__ - INFO - The user requested to exit the program
+2023-11-23 17:38:10,553 - __main__ - INFO - @ Category_A 2
+2023-11-23 17:38:12,251 - __main__ - INFO - Q

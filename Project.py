@@ -10,12 +10,6 @@ import openpyxl
 import logging
 import logging.config
 
-
-#initialize logme.txt
-#In order words manually overwrite the file due to the fact that the overwrite option in the logging module is not working
-with open('logme.txt', 'w') as file_logger:                 
-  file_logger.write(' ')
-
 logging.config.fileConfig(fname='myeditorlog.conf', disable_existing_loggers = False)
 
 # Get the logger specified in the file
@@ -647,19 +641,18 @@ class MainConsole:
                 k = int(parameters[1])
                 most_relevant_stems = jaccard_instance.get_most_relevant_stems_for_category(category, k)
                 print(f"The top {k} stems for category {category} are: {most_relevant_stems}")
-                logger.info(f"the user requested the top {k} stems for the category: {category}")
+                logger.info(user_input)
             elif operation == '#':
                     stem = parameters[0]
                     k = int(parameters[1])
                     most_relevant_categories = jaccard_instance.get_most_relevant_categories_for_stem(stem, k)
                     print(f"The top {k} categories for stem {stem} are: {most_relevant_categories}")
-                    logger.info(f"The top {k} categories for stem {stem} are: {most_relevant_categories}")
-                    logger.info(f"The user requested the top {k} categories for a given stem: {stem}")
+                    logger.info(user_input)
             elif operation == '$':
                     stem = parameters[0]
                     category = parameters[1]
                     print(f"The Jaccard Index for the pair ({stem}, {category}) is: {jaccard_index_value[stem][category]}")
-                    logger.info(f"The user requested the Jaccard Index for this pair: ({stem} , {category}) ")
+                    logger.info(user_input)
             elif operation == '*':
                     try:
                         filename = parameters[0]
@@ -667,7 +660,7 @@ class MainConsole:
                         writer = write_files(filename, jaccard_index_value, file_type)
                         writer.write_to_file()
                         print(f"Data has been written to file: {filename}.{file_type}")
-                        logger.info(f"The user requested to write the data to a file with name: {filename}.{file_type}")
+                        logger.info(user_input)
                     except Exception as e:
                         print(f"An error occurred: {e}")
             elif operation == 'P':
@@ -675,7 +668,7 @@ class MainConsole:
                     option = parameters[1]
                     if option != '-c' and option != '-t':
                         print("Invalid option")
-                        logger.info("The user entered an invalid option")
+                        logger.info(user_input)
                         continue
                     else:
                         if option == '-c':
@@ -683,7 +676,7 @@ class MainConsole:
                                 print(f"Document {did} does not exist")
                                 continue
                             print(f"The categories for document {did} are: {bpt_categories.retrieve(did)}")
-                            logger.info(f"The user requested the categories for a given document with dociD: {did}")
+                            logger.info(user_input)
                         else:
                             stem_collection = []
                             result = bpt__term.retrieve(did)
@@ -701,13 +694,13 @@ class MainConsole:
                                     if stem_to_print is not None:
                                         stem_collection.extend(stem_to_print)
                             print(f"The stems for document {did} are: {stem_collection}")
-                            logger.info(f"The user requested the stems for a given document with docID: {did}")
+                            logger.info(user_input)
             elif operation == 'C':
                     did = parameters[0]
                     option = parameters[1]
                     if option != '-c' and option != '-t':
                         print("Invalid option")
-                        logger.info("The user entered an invalid option")
+                        logger.info(user_input)
                         continue
                     else:
                         if option == '-c':
@@ -720,23 +713,23 @@ class MainConsole:
                             for stem in result:
                                 stem_collection.update(stem)
                             print(f"The count of unique terms for document {did} is: {len(stem_collection)}")
-                            logger.info(f"The user requested the count of unique terms for a given document with docID: {did}")
+                            logger.info(user_input)
                         else:
                             categories_set = bpt_categories.retrieve(did)
                             if categories_set is None:
                                 print(f"Document {did} does not exist")
                                 continue
                             print(f"The count of categories for document {did} is: {len(categories_set)}")
-                            logger.info(f"The user requested the count of categories for a given document with docID: {did}")
+                            logger.info(user_input)
             elif operation == 'Q': # Exit the program.Not available to the user but its a nice feature to have
                     print("So you found my little secret....Terminating the program....")
                     print("Thank you for using our application!")
                     print("Goodbye!")
-                    logger.info("The user requested to exit the program")
+                    logger.info(user_input)
                     break
             else:
                     print("Invalid operation")
-                    logger.info("The user entered an invalid operation")
+                    logger.info(user_input)
 
 
     @staticmethod
