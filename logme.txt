@@ -1,2 +1,2 @@
-2023-11-23 17:38:10,553 - __main__ - INFO - @ Category_A 2
-2023-11-23 17:38:12,251 - __main__ - INFO - Q
+2023-11-26 10:47:00,561 - __main__ - INFO - * myfile.json
+2023-11-26 10:47:08,689 - __main__ - INFO - * myfile.xlsx
