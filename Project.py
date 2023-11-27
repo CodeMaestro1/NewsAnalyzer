@@ -566,6 +566,11 @@ class jaccard_index:
         # Create a dictionary for the category using dictionary comprehension
         category_jaccard_index = {stem: categories[category] for stem, categories in self.jaccard_index.items() if category in categories}
 
+        # If the category_jaccard_index dictionary is empty, the category was not found
+        if not category_jaccard_index:
+            print(f"Category {category} not found in jaccard_index.")
+            return []
+
         # Sort the stems by their jaccard index in descending order and get the top k stems
         top_k_stems = [stem for stem, _ in sorted(category_jaccard_index.items(), key=lambda item: item[1], reverse=True)[:k]]
 
@@ -583,11 +588,8 @@ class jaccard_index:
         # Get the jaccard index for the stem
         stem_jaccard_index = self.jaccard_index[stem]
 
-        # Sort the categories by their jaccard index in descending order
-        sorted_categories = sorted(stem_jaccard_index.items(), key = lambda item: item[1], reverse=True)
-
-        # Get the top k categories
-        top_k_categories = [category for category, _ in sorted_categories[:k]]
+        # Sort the categories by their jaccard index in descending order and get the top k categories
+        top_k_categories = [category for category, _ in sorted(stem_jaccard_index.items(), key = lambda item: item[1], reverse=True)[:k]]
 
         return top_k_categories
     
@@ -600,20 +602,10 @@ class MainConsole:
         #file_to_read_term = r"C:\Users\mypc1\Desktop\Project_1\dataforproject1\lyrl2004_vectors_train.dat.txt"
         #file_to_read_stems = r"C:\Users\mypc1\Desktop\Project_1\dataforproject1\stem.termid.idf.map.txt"
 
-        #Thanos paths
-        #file_to_read_categories = r"C:\Users\user\Downloads\NewsAnalyzer-main\category_docId.txt"
-        #file_to_read_term = r"C:\Users\user\Downloads\NewsAnalyzer-main\docID_term.txt"
-        #file_to_read_stems = r"C:\Users\user\Downloads\NewsAnalyzer-main\stem_term.txt"
-
-        #My paths
-        #file_to_read_categories = r"C:\Users\mypc1\Desktop\Project_1\dataforproject1\rcv1-v2.topics.qrels.txt"
-        #file_to_read_term = r"C:\Users\mypc1\Desktop\Project_1\dataforproject1\lyrl2004_vectors_train.dat.txt"
-        #file_to_read_stems = r"C:\Users\mypc1\Desktop\Project_1\dataforproject1\stem.termid.idf.map.txt"
-
         #Dont forget to change the path based on your computer
-        file_to_read_categories = r"C:\Users\mypc1\Desktop\Project_1\TestFile\category_docId.txt"
-        file_to_read_term = r"C:\Users\mypc1\Desktop\Project_1\TestFile\docID_term.txt"
-        file_to_read_stems = r"C:\Users\mypc1\Desktop\Project_1\TestFile\stem_term.txt"
+        file_to_read_categories = r"C:\Users\user\Downloads\NewsAnalyzer-main\category_docId.txt"
+        file_to_read_term = r"C:\Users\user\Downloads\NewsAnalyzer-main\docID_term.txt"
+        file_to_read_stems = r"C:\Users\user\Downloads\NewsAnalyzer-main\stem_term.txt"
 
         
 
@@ -660,6 +652,9 @@ class MainConsole:
             elif operation == '$':
                     stem = parameters[0]
                     category = parameters[1]
+                    if stem not in jaccard_instance.stem or category not in jaccard_instance.category:
+                        print(f"({stem}, {category}) pair does not exist.")
+                        continue
                     print(f"The Jaccard Index for the pair ({stem}, {category}) is: {jaccard_index_value[stem][category]}")
                     logger.info(user_input)
             elif operation == '*':
