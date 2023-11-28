@@ -10,7 +10,6 @@ import openpyxl
 import logging
 import logging.config
 
-
 logging.config.fileConfig(fname='myeditorlog.conf', disable_existing_loggers = False)
 
 # Get the logger specified in the file
@@ -455,10 +454,10 @@ class write_files:
             self.file_name = file_name
             self.data_to_write = data_to_write
             self.type_of_file = type_of_file
-            self.file_handling = {
-                "json": self.write_json,
-                "xlsx": self.write_xlsx
-            }
+            # self.file_handling = {
+            #     "json": self.write_json,
+            #     "xlsx": self.write_xlsx
+            # }
         except Exception as e:
             print(f"An error occurred: {e}")
             return
@@ -491,14 +490,18 @@ class write_files:
         ws.title = "Jaccard Index"
         ws.append(["Stem", "Category", "Jaccard Index"])
 
-        rows = (
-            [stem, category, jaccard_index]
-            for stem, categories in self.data_to_write.items()
-            for category, jaccard_index in categories.items()
-        )
+        for stem, categories in self.data_to_write.items():
+            for category, jaccard_index in categories.items():
+                ws.append([stem, category, jaccard_index])
 
-        for row in rows:
-            ws.append(row)
+        # rows = (
+        #     [stem, category, jaccard_index]
+        #     for stem, categories in self.data_to_write.items()
+        #     for category, jaccard_index in categories.items()
+        # )
+
+        # for row in rows:
+        #     ws.append(row)
 
         wb.save(user_file)
 
@@ -513,9 +516,10 @@ class write_files:
         user_file = f"{self.file_name}.{self.type_of_file}"
 
         try:
-            file_handler = self.file_handling.get(self.type_of_file)
-            if file_handler:
-                file_handler(user_file)
+            if self.type_of_file == "json":
+                self.write_json(user_file)
+            elif self.type_of_file == "xlsx":
+                self.write_xlsx(user_file)
             else:
                 print(f"Unsupported file type: {self.type_of_file}. Only json and xlsx are supported.")
         except IOError as e:
@@ -603,9 +607,14 @@ class MainConsole:
         #file_to_read_stems = r"C:\Users\mypc1\Desktop\Project_1\dataforproject1\stem.termid.idf.map.txt"
 
         #Dont forget to change the path based on your computer
-        file_to_read_categories = r"C:\Users\user\Downloads\NewsAnalyzer-main\category_docId.txt"
-        file_to_read_term = r"C:\Users\user\Downloads\NewsAnalyzer-main\docID_term.txt"
-        file_to_read_stems = r"C:\Users\user\Downloads\NewsAnalyzer-main\stem_term.txt"
+        #file_to_read_categories = r"C:\Users\user\Downloads\NewsAnalyzer-main\category_docId.txt"
+        #file_to_read_term = r"C:\Users\user\Downloads\NewsAnalyzer-main\docID_term.txt"
+        #file_to_read_stems = r"C:\Users\user\Downloads\NewsAnalyzer-main\stem_term.txt"
+
+
+        file_to_read_categories = r"C:\Users\mypc1\Desktop\Shared_Project\NewsAnalyzer\category_docId.txt"
+        file_to_read_term = r"C:\Users\mypc1\Desktop\Shared_Project\NewsAnalyzer\docID_term.txt"
+        file_to_read_stems = r"C:\Users\mypc1\Desktop\Shared_Project\NewsAnalyzer\stem_term.txt"
 
         
 

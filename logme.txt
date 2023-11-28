@@ -1,2 +1,2 @@
-2023-11-26 10:47:00,561 - __main__ - INFO - * myfile.json
-2023-11-26 10:47:08,689 - __main__ - INFO - * myfile.xlsx
+2023-11-28 21:14:27,010 - __main__ - INFO - * gogogo.xlsx
+2023-11-28 21:15:31,275 - __main__ - INFO - Q
