@@ -454,10 +454,6 @@ class write_files:
             self.file_name = file_name
             self.data_to_write = data_to_write
             self.type_of_file = type_of_file
-            # self.file_handling = {
-            #     "json": self.write_json,
-            #     "xlsx": self.write_xlsx
-            # }
         except Exception as e:
             print(f"An error occurred: {e}")
             return
@@ -475,9 +471,7 @@ class write_files:
             for stem, categories in self.data_to_write.items()
             for category, jaccard_index in categories.items()
         )
-        #from comprehension to generator
-        #generator -> list in dump()
-        #Theoretically: list comprehension->faster in serialization
+
         with open(user_file, 'w') as file:
             json.dump(list(json_data), file)
 
@@ -493,15 +487,6 @@ class write_files:
         for stem, categories in self.data_to_write.items():
             for category, jaccard_index in categories.items():
                 ws.append([stem, category, jaccard_index])
-
-        # rows = (
-        #     [stem, category, jaccard_index]
-        #     for stem, categories in self.data_to_write.items()
-        #     for category, jaccard_index in categories.items()
-        # )
-
-        # for row in rows:
-        #     ws.append(row)
 
         wb.save(user_file)
 
@@ -649,6 +634,9 @@ class MainConsole:
             if operation == '@':
                 category = parameters[0]
                 k = int(parameters[1])
+                if k <= 0:
+                    print("Invalid value for k. k must be greater than 0.")
+                    continue
                 most_relevant_stems = jaccard_instance.get_most_relevant_stems_for_category(category, k)
                 print(f"The top {k} stems for category {category} are: {most_relevant_stems}")
                 logger.info(user_input)
