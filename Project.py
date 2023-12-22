@@ -587,26 +587,11 @@ class MainConsole:
     @staticmethod
     def main():
         print("Welcome to our application!")
-        #file_to_read_categories = r"C:\Users\mypc1\Desktop\Project_1\dataforproject1\rcv1-v2.topics.qrels.txt"
-        #file_to_read_term = r"C:\Users\mypc1\Desktop\Project_1\dataforproject1\lyrl2004_vectors_train.dat.txt"
-        #file_to_read_stems = r"C:\Users\mypc1\Desktop\Project_1\dataforproject1\stem.termid.idf.map.txt"
 
-        #Dont forget to change the path based on your computer
-        #file_to_read_categories = r"C:\Users\user\Downloads\NewsAnalyzer-main\category_docId.txt"
-        #file_to_read_term = r"C:\Users\user\Downloads\NewsAnalyzer-main\docID_term.txt"
-        #file_to_read_stems = r"C:\Users\user\Downloads\NewsAnalyzer-main\stem_term.txt"
+        file_to_read_categories = r"C:\Users\mypc1\Desktop\Test\NewsAnalyzer\rcv1-v2.topics.qrels.txt"
+        file_to_read_term = r"C:\Users\mypc1\Desktop\Test\NewsAnalyzer\lyrl2004_vectors_train.dat.txt"
+        file_to_read_stems = r"C:\Users\mypc1\Desktop\Test\NewsAnalyzer\stem.termid.idf.map.txt"
 
-
-        file_to_read_categories = r"C:\Users\mypc1\Desktop\Shared_Project\NewsAnalyzer\category_docId.txt"
-        file_to_read_term = r"C:\Users\mypc1\Desktop\Shared_Project\NewsAnalyzer\docID_term.txt"
-        file_to_read_stems = r"C:\Users\mypc1\Desktop\Shared_Project\NewsAnalyzer\stem_term.txt"
-
-        
-
-        #Colab paths ---Personal use
-        #file_to_read_categories = "/content/drive/MyDrive/Colab Notebooks/TestData/category_docId.txt"
-        #file_to_read_term = "/content/drive/MyDrive/Colab Notebooks/TestData/docID_term.txt"
-        #file_to_read_stems = "/content/drive/MyDrive/Colab Notebooks/TestData/stem_term.txt"
         
         order_of_tree = 10
         bpt_categories = BPlusTree(order_of_tree)
