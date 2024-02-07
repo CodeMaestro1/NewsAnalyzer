@@ -2,18 +2,9 @@ from __future__ import annotations
 from openpyxl.styles import Font
 from math import floor
 from random import randint
-import logging
-import logging.config
 import os
 import json
 import openpyxl
-import logging
-import logging.config
-
-logging.config.fileConfig(fname='myeditorlog.conf', disable_existing_loggers = False)
-
-# Get the logger specified in the file
-logger = logging.getLogger(__name__)
 
 
 ###########################################BplustreeStart##############################################
@@ -370,29 +361,28 @@ class BPlusTree(object):
         result = [item] * (len(lst) * 2)
         result[0::2] = lst
         return result
-    
+
 #############################################BplustreeEnd##############################################
 
 #################################################MainStart#############################################
 
 class read_files:
-  
     @staticmethod
     def read_pairs_from_file(file_name, bpt_instance):
         """
         Reads pairs from a file and stores them in the keys dictionary.
         """
-
-        try:
-            if not isinstance(file_name, str) or not os.path.isfile(file_name):
-                raise ValueError(f"The file {file_name} must be a valid string path.")
-        except Exception as e:
-            print(f"An error occurred: {e}")
-
         keys = {}
         already_inserted = set()
         bplus_set = set()
-        
+        try:
+            if not isinstance(file_name, str):
+                raise ValueError("file_name must be a string.")
+            if not os.path.isfile(file_name):
+                raise ValueError(f"File {file_name} does not exist.")
+        except Exception as e:
+            print(f"An error occurred: {e}")
+
         try:
             with open(file_name, 'r', encoding = "latin1") as file:
                 for line in file:
@@ -403,44 +393,53 @@ class read_files:
                         elements = line.split()
                         if len(elements) >= 2:
                             if ":" in line:
-                                document_id, *term = [elements[0]] + [element.split(':')[0] for element in elements[1:] if ':' in element]
+                                document_id = elements[0]  # Extract document ID
+                                term = []
+
+                                for element in elements[1:]:
+                                    if ':' in element:
+                                        term.append(element.split(':')[0])  # Add only the term before colon to the list
 
                                 if document_id in already_inserted:
                                     keys[document_id].update(term)
-                                    bpt_instance.retrieve(document_id).append(term) if document_id in bplus_set \
-                                    else bplus_set.add(document_id) or bpt_instance.insert(document_id, term)
-
+                                    if document_id in bplus_set:
+                                        bpt_instance.retrieve(document_id).append(term)
+                                    else:
+                                        bplus_set.add(document_id)
+                                        bpt_instance.insert(document_id, term)
                                 else:
                                     already_inserted.add(document_id)
                                     keys[document_id] = term
-                                    bpt_instance.retrieve(document_id).append(term) if document_id in bplus_set \
-                                    else bplus_set.add(document_id) or bpt_instance.insert(document_id, term)
-
+                                    if document_id in bplus_set:
+                                        bpt_instance.retrieve(document_id).append(term)
+                                    else:
+                                        bplus_set.add(document_id)
+                                        bpt_instance.insert(document_id, term)
                             else:
-                                key, value = elements[0], elements[1]
+                                key = elements[0]
+                                value = elements[1]
 
                                 if key in already_inserted:
                                     keys[key].add(value)
-                                    bpt_instance.retrieve(key).add(value) if value in bplus_set \
-                                    else bpt_instance.insert(value, {key})
-
+                                    if value in bplus_set:
+                                        bpt_instance.retrieve(key).add(value)
+                                    else:
+                                        bpt_instance.insert(value, {key})
                                 else:
                                     already_inserted.add(key)
                                     keys[key] = {value}
-                                    bpt_instance.retrieve(value).add(key) if value in bplus_set \
-                                    else bpt_instance.insert(value, {key})
-
+                                    if value in bplus_set:
+                                        bpt_instance.retrieve(value).add(key)
+                                    else:
+                                        bpt_instance.insert(value, {key})
         except IOError:
             print(f"Could not read file: {file_name}")
 
         print("Files have been stored")
         return keys
-    
+
 class write_files:
     def __init__(self, file_name, data_to_write, type_of_file):
-        """
-        Constructs an object of the write_files class.
-        """
         try:
             if not isinstance(file_name, str):
                 raise ValueError("The file name must be a string.")
@@ -458,65 +457,37 @@ class write_files:
             print(f"An error occurred: {e}")
             return
 
-    def write_json(self, user_file):
-        """
-        Writes the desired data in a json file.
-        """
-        json_data = (
-            {
-                'stem': stem,
-                'category': category,
-                'jaccardIndex': jaccard_index
-            }
-            for stem, categories in self.data_to_write.items()
-            for category, jaccard_index in categories.items()
-        )
-
-        with open(user_file, 'w') as file:
-            json.dump(list(json_data), file)
-
-    def write_xlsx(self, user_file):
-        """
-        Writes the desired data in a xlsx file.
-        """
-        wb = openpyxl.Workbook()
-        ws = wb.active
-        ws.title = "Jaccard Index"
-        ws.append(["Stem", "Category", "Jaccard Index"])
-
-        for stem, categories in self.data_to_write.items():
-            for category, jaccard_index in categories.items():
-                ws.append([stem, category, jaccard_index])
-
-        wb.save(user_file)
-
     def write_to_file(self):
-        """
-        Writes every (category, stem) pair with its corresponding Jaccard Index in a specified file.
-        """
-        if self.type_of_file is None or self.file_name is None:
-            print("File type or file name is not defined.")
-            return
+            try:
+                if self.type_of_file is not  None or self.file_name is not None:
+                    user_file =  f"{self.file_name}.{self.type_of_file}"
+                    with open(user_file, 'w') as file:
+                        if self.type_of_file == "json":
+                            json_data = []
+                            for stem, categories in self.data_to_write.items():
+                                for category, jaccard_index in categories.items():
+                                    json_data.append({
+                                        'stem': stem,
+                                        'category': category,
+                                        'jaccardIndex': jaccard_index
+                                })
+                            json.dump(json_data, file)
 
-        user_file = f"{self.file_name}.{self.type_of_file}"
+                        else:
+                            wb = openpyxl.Workbook()
+                            ws = wb.active
+                            ws.title = "Jaccard Index"
+                            ws.append(["Stem", "Category", "Jaccard Index"])
+                            for stem, categories in self.data_to_write.items():
+                                for category, jaccard_index in categories.items():
+                                    ws.append([stem, category, jaccard_index])
+                            wb.save(user_file)
+            except IOError:
+                print(f"Could not write to file: {self.file_name}")
+                return
 
-        try:
-            if self.type_of_file == "json":
-                self.write_json(user_file)
-            elif self.type_of_file == "xlsx":
-                self.write_xlsx(user_file)
-            else:
-                print(f"Unsupported file type: {self.type_of_file}. Only json and xlsx are supported.")
-        except IOError as e:
-            print(f"Could not write to file: {self.file_name}. Error: {e}")
-        
-
-                        
 class jaccard_index:
     def __init__(self, category, term, stem):
-        """
-        Constructs an object of the jaccard_index class
-        """
         self.category = category
         self.term = term
         self.stem = stem
@@ -524,50 +495,63 @@ class jaccard_index:
 
     def calculate_jaccard_index(self):
         """
-        Calculates the Jaccard Index for each stem and category
+        Calculate the jaccard index for each stem and category
         """
-        term_docs_dict = {stem_key: set(self.get_term_docs(term_value)) for stem_key, term_value in self.stem.items()}
-        category_docs_dict = {category_key: set(category_docs) for category_key, category_docs in self.category.items()}
-        
-        for stem_key, term_docs in term_docs_dict.items():
+        for stem_key, term_value in self.stem.items():
             self.jaccard_index[stem_key] = {}
-            for category_key, category_docs_set in category_docs_dict.items():
-                intersection = len(term_docs & category_docs_set)
-                union = len(term_docs) + len(category_docs_set) - intersection
-                self.jaccard_index[stem_key][category_key] = float(intersection) / union
+            term_docs = set(self.get_term_docs(term_value))
+            category_key = None
+            for category_key, category_docs in self.category.items():
+                category_docs_set = set(category_docs)
+                intersection = term_docs & category_docs_set
+                union = term_docs | category_docs_set
+                print(f'Intersection for {stem_key} and {category_key}: {intersection}')
+                print(f'Union for {stem_key} and {category_key}: {union}')
+                self.jaccard_index[stem_key][category_key] = len(intersection) / len(union)
         return self.jaccard_index
 
     def get_term_docs(self, term_value):
         """
-        Gets all the documents that contain at least one of the terms
+        Get all the documents that contain at least one of the terms
         """
-        term_docs = set() # no duplicates from the beginning
+        term_docs = []
         term_value_set = set(term_value)
         for doc_id, terms in self.term.items():
-            if term_value_set & set(terms):
-                term_docs.add(doc_id)
-        return term_docs  
+            for term_list in terms:
+                term_list_set = {term_list}
+                if term_value_set & term_list_set:
+                    term_docs.append(doc_id)
+        return set(term_docs)  # remove duplicates
 
     def get_most_relevant_stems_for_category(self, category, k):
         """
-        Gets the k most relevant stems for the given category
+        Get the top k stems for the given category
         """
-        # Create a dictionary for the category using dictionary comprehension
-        category_jaccard_index = {stem: categories[category] for stem, categories in self.jaccard_index.items() if category in categories}
+        # Create a dictionary for the category
+        category_jaccard_index = {}
+
+        # Iterate over the jaccard_index dictionary
+        for stem, categories in self.jaccard_index.items():
+            # If the category exists in the inner dictionary, add it to the category_jaccard_index dictionary
+            if category in categories:
+                category_jaccard_index[stem] = categories[category]
 
         # If the category_jaccard_index dictionary is empty, the category was not found
         if not category_jaccard_index:
             print(f"Category {category} not found in jaccard_index.")
             return []
 
-        # Sort the stems by their jaccard index in descending order and get the top k stems
-        top_k_stems = [stem for stem, _ in sorted(category_jaccard_index.items(), key=lambda item: item[1], reverse=True)[:k]]
+        # Sort the stems by their jaccard index in descending order
+        sorted_stems = sorted(category_jaccard_index.items(), key=lambda item: item[1], reverse = True)
+
+        # Get the top k stems
+        top_k_stems = [stem for stem, _ in sorted_stems[:k]]
 
         return top_k_stems
-    
+
     def get_most_relevant_categories_for_stem(self, stem, k):
         """
-        Gets the top k categories for the given stem
+        Get the top k categories for the given stem
         """
         # Check if the stem exists in the jaccard_index
         if stem not in self.jaccard_index:
@@ -577,22 +561,29 @@ class jaccard_index:
         # Get the jaccard index for the stem
         stem_jaccard_index = self.jaccard_index[stem]
 
-        # Sort the categories by their jaccard index in descending order and get the top k categories
-        top_k_categories = [category for category, _ in sorted(stem_jaccard_index.items(), key = lambda item: item[1], reverse=True)[:k]]
+        # Sort the categories by their jaccard index in descending order
+        sorted_categories = sorted(stem_jaccard_index.items(), key = lambda item: item[1], reverse=True)
+
+        # Get the top k categories
+        top_k_categories = [category for category, _ in sorted_categories[:k]]
 
         return top_k_categories
-    
+
+
 
 class MainConsole:
     @staticmethod
     def main():
         print("Welcome to our application!")
 
-        file_to_read_categories = r"C:\Users\mypc1\Desktop\Test\NewsAnalyzer\rcv1-v2.topics.qrels.txt"
-        file_to_read_term = r"C:\Users\mypc1\Desktop\Test\NewsAnalyzer\lyrl2004_vectors_train.dat.txt"
-        file_to_read_stems = r"C:\Users\mypc1\Desktop\Test\NewsAnalyzer\stem.termid.idf.map.txt"
+        #Change this!!!!!!!!!!!!!!!!
+        ######################################################################################################################
+        #Colab paths ---Personal use
+        file_to_read_categories = r"C:\Users\mypc1\Desktop\Project_1\NewsAnalyzer\category_docId.txt"
+        file_to_read_term = r"C:\Users\mypc1\Desktop\Project_1\NewsAnalyzer\docID_term.txt"
+        file_to_read_stems = r"C:\Users\mypc1\Desktop\Project_1\NewsAnalyzer\stem_term.txt"
+        ######################################################################################################################
 
-        
         order_of_tree = 10
         bpt_categories = BPlusTree(order_of_tree)
         bpt__term = BPlusTree(order_of_tree)
@@ -611,7 +602,7 @@ class MainConsole:
             user_input = input("Please enter your choice: ")
             parsed_input = user_input.split()
             try:
-                operation = parsed_input[0] 
+                operation = parsed_input[0]
             except IndexError:
                 print("Error: Empty input. Please enter a valid command.") # If the user enters an empty input, the program will not crash
                 continue
@@ -619,26 +610,17 @@ class MainConsole:
             if operation == '@':
                 category = parameters[0]
                 k = int(parameters[1])
-                if k <= 0:
-                    print("Invalid value for k. k must be greater than 0.")
-                    continue
                 most_relevant_stems = jaccard_instance.get_most_relevant_stems_for_category(category, k)
                 print(f"The top {k} stems for category {category} are: {most_relevant_stems}")
-                logger.info(user_input)
             elif operation == '#':
                     stem = parameters[0]
                     k = int(parameters[1])
                     most_relevant_categories = jaccard_instance.get_most_relevant_categories_for_stem(stem, k)
                     print(f"The top {k} categories for stem {stem} are: {most_relevant_categories}")
-                    logger.info(user_input)
             elif operation == '$':
                     stem = parameters[0]
                     category = parameters[1]
-                    if stem not in jaccard_instance.stem or category not in jaccard_instance.category:
-                        print(f"({stem}, {category}) pair does not exist.")
-                        continue
                     print(f"The Jaccard Index for the pair ({stem}, {category}) is: {jaccard_index_value[stem][category]}")
-                    logger.info(user_input)
             elif operation == '*':
                     try:
                         filename = parameters[0]
@@ -646,7 +628,6 @@ class MainConsole:
                         writer = write_files(filename, jaccard_index_value, file_type)
                         writer.write_to_file()
                         print(f"Data has been written to file: {filename}.{file_type}")
-                        logger.info(user_input)
                     except Exception as e:
                         print(f"An error occurred: {e}")
             elif operation == 'P':
@@ -654,7 +635,6 @@ class MainConsole:
                     option = parameters[1]
                     if option != '-c' and option != '-t':
                         print("Invalid option")
-                        logger.info(user_input)
                         continue
                     else:
                         if option == '-c':
@@ -662,7 +642,6 @@ class MainConsole:
                                 print(f"Document {did} does not exist")
                                 continue
                             print(f"The categories for document {did} are: {bpt_categories.retrieve(did)}")
-                            logger.info(user_input)
                         else:
                             stem_collection = []
                             result = bpt__term.retrieve(did)
@@ -680,13 +659,11 @@ class MainConsole:
                                     if stem_to_print is not None:
                                         stem_collection.extend(stem_to_print)
                             print(f"The stems for document {did} are: {stem_collection}")
-                            logger.info(user_input)
             elif operation == 'C':
                     did = parameters[0]
                     option = parameters[1]
                     if option != '-c' and option != '-t':
                         print("Invalid option")
-                        logger.info(user_input)
                         continue
                     else:
                         if option == '-c':
@@ -699,42 +676,32 @@ class MainConsole:
                             for stem in result:
                                 stem_collection.update(stem)
                             print(f"The count of unique terms for document {did} is: {len(stem_collection)}")
-                            logger.info(user_input)
                         else:
                             categories_set = bpt_categories.retrieve(did)
                             if categories_set is None:
                                 print(f"Document {did} does not exist")
                                 continue
                             print(f"The count of categories for document {did} is: {len(categories_set)}")
-                            logger.info(user_input)
             elif operation == 'Q': # Exit the program.Not available to the user but its a nice feature to have
                     print("So you found my little secret....Terminating the program....")
                     print("Thank you for using our application!")
                     print("Goodbye!")
-                    logger.info(user_input)
                     break
             else:
                     print("Invalid operation")
-                    logger.info(user_input)
 
 
     @staticmethod
     def print_menu():
-        """
-        Prints the options that the user can choose from. 
-        """
-        
-        print("Enter the operation you want to perform:")
-        print("@ <category> <k> : Retrieve and display the <k> most relevant stems (based on Jaccard Index) for a specific category.")
-        print("# <stem> <k> : Display the <k> most relevant categories (based on Jaccard Index) for a specific stem.")
-        print("$ <stem> <category>: Provides the Jaccard Index for a given pair (stem, category).")
-        print("* <filename>.<filetype> : Saves all (category, stem) pairs along with their Jaccard Index in a format (stem category Jaccard_Index) to the specified file.")
-        print("P <did> -c : Display all the categories associated with the document identified by the code id.")
-        print("P <did> -t : Fetch all the stems present in the document linked to a specific code id.")
-        print("C <did> -c : Calculate and display the count of unique terms within the document specified by the code id.")
-        print("C <did> -t : Calculate and display the count of categories assigned to the document with the code id")
+        print("Enter the operation you want to perform: \n" +
+              "@ <category> <k> : Retrieve and display the <k> most relevant stems (based on Jaccard Index) for a specific category. \n" +
+              "# <stem> <k> : Display the <k> most relevant categories (based on Jaccard Index) for a specific stem. \n" +
+              "$ <stem> <category>: Provides the Jaccard Index for a given pair (stem, category). \n" +
+              "* <filename>.<filetype> : Saves all (category, stem) pairs along with their Jaccard Index in a format (stem category Jaccard_Index) to the specified file\n" +
+              "P <did> -c : Display all the categories associated with the document identified by the code id.\n" +
+              "P <did> -t : Fetch all the stems present in the document linked to a specific code id.\n" +
+              "C <did> -c : Calculate and display the count of unique terms within the document specified by the code id.\n" +
+              "C <did> -t : Calculate and display the count of categories assigned to the document with the code id")
 
 if __name__ == "__main__":
     MainConsole.main()
-
-#################################################MainEnd#############################################
