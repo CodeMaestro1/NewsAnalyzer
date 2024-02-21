@@ -24,7 +24,7 @@ The application is accompanied by a suite of unit tests to validate the correctn
 
 The `BPlusTree` class provides a B+ tree implementation with support for insertion, retrieval, and deletion of key-value pairs. The tree is designed to efficiently 
 handle large datasets by organizing the data into a hierarchical structure. The branching factor, or order, of the tree is configurable, allowing you to adapt it to your specific needs.
-For further details, you may see the document [BplusTreeReport.pdf](path/to/BplusTreeReport.pdf).
+For further details, you may see the document [BplusTreeReport.pdf](https://github.com/CodeMaestro1/NewsAnalyzer/blob/main/BplusTreeReport_Final.pdf).
 
 
 ## Jaccard Index
