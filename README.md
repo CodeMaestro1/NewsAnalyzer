@@ -119,4 +119,4 @@ This application combines the efficiency of a B+ tree for managing large dataset
 - **Refactoring:** [Thano Panou](https://github.com/Thanospa2002) - Thanos has contributed to the refactoring phase, enhancing the code's structure and maintainability.
 
 **License:**
-GNU General Public License v3.0
+[GNU General Public License v3.0](https://github.com/CodeMaestro1/NewsAnalyzer/blob/main/LICENSE)
